@@ -1,0 +1,244 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Crossover: stock analysis workbench</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;600&family=Spectral:wght@500;700&display=swap">
+<style>
+:root{--bg:#EAF0F4;--panel:#FAFBFC;--ink:#12263A;--muted:#5B6B7A;--line:#CFD8E0;--up:#137A4B;--dn:#C2412D;--a:#0E7C7B;--b:#B45309;color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0C1822;--panel:#13232F;--ink:#E3ECF3;--muted:#8FA3B3;--line:#27394A;--up:#3DCB8B;--dn:#F2705C;--a:#3CC4C0;--b:#F59E6B;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#0C1822;--panel:#13232F;--ink:#E3ECF3;--muted:#8FA3B3;--line:#27394A;--up:#3DCB8B;--dn:#F2705C;--a:#3CC4C0;--b:#F59E6B;color-scheme:dark}
+html{scroll-padding-top:env(safe-area-inset-top,0px);scroll-behavior:smooth}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 "Instrument Sans",system-ui,sans-serif}
+.wrap{max-width:1180px;margin:0 auto;padding:0 20px}
+nav{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:16px 0;border-bottom:1px solid var(--line)}
+nav b{font:700 22px Spectral,Georgia,serif}
+nav div{display:flex;gap:18px;align-items:center;font-size:14px}
+a{color:inherit;text-decoration:none}a:hover{text-decoration:underline}
+h1{font:700 clamp(32px,5.5vw,54px)/1.08 Spectral,Georgia,serif;letter-spacing:-.015em;margin:44px 0 12px;max-width:16em}
+h2{font:700 26px/1.2 Spectral,Georgia,serif;margin:0 0 6px}
+h3{font:600 16px/1.3 "Instrument Sans",sans-serif;margin:0}
+.lede{max-width:60ch;color:var(--muted);margin:0 0 8px;font-size:17px}
+.banner{font-size:13px;color:var(--muted);margin:0 0 28px}
+section{padding:32px 0 8px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:18px}
+.cols{display:grid;grid-template-columns:1fr 310px;gap:20px;align-items:start}
+@media (max-width:900px){.cols{grid-template-columns:1fr}}
+.top{display:flex;flex-wrap:wrap;justify-content:space-between;gap:10px;margin-bottom:12px}
+.top h2{margin:0}.top small{color:var(--muted);font-size:14px}
+.pills{display:flex;flex-wrap:wrap;gap:6px}
+button{font:600 13px "Instrument Sans",sans-serif;color:var(--ink);background:transparent;border:1px solid var(--line);border-radius:6px;padding:6px 11px;cursor:pointer}
+button[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+button.solid{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+button:focus-visible,input:focus-visible,textarea:focus-visible{outline:2px solid var(--a);outline-offset:2px}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin:0 0 14px}
+.kpis div{border-left:3px solid var(--line);padding-left:10px}
+.kpis small{display:block;color:var(--muted);font-size:12px}
+.kpis b{font-size:18px;font-variant-numeric:tabular-nums}
+.up{color:var(--up)}.dn{color:var(--dn)}
+#ro{font-size:13px;font-variant-numeric:tabular-nums;color:var(--muted);min-height:20px;margin:6px 0}
+#ro b{color:var(--ink);font-weight:600}
+canvas{display:block;width:100%;touch-action:pan-y}
+.wl{display:grid;grid-template-columns:1fr 70px auto;gap:10px;align-items:center;width:100%;text-align:left;padding:10px;margin-bottom:6px;border-radius:8px}
+.wl small{display:block;font-weight:400;font-size:12px;opacity:.75}
+.wl .r{text-align:right;font-variant-numeric:tabular-nums}.wl .r em{display:block;font-style:normal;font-size:12px}
+.wl[aria-pressed="true"] .up,.wl[aria-pressed="true"] .dn{color:inherit}
+.feat{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:20px;margin-top:14px}
+.feat p{color:var(--muted);margin:6px 0 0;font-size:15px}
+.ctl{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:6px 24px;margin-bottom:10px}
+.ctl label{font-weight:600;font-size:14px}.ctl span{float:right;font-weight:400;color:var(--muted)}
+input[type=range]{width:100%;accent-color:var(--a)}
+.legend{display:flex;flex-wrap:wrap;gap:4px 16px;font-size:13px;color:var(--muted);margin-bottom:6px}
+.legend i{display:inline-block;width:14px;height:3px;margin-right:6px;vertical-align:middle;border-radius:2px}
+table{width:100%;border-collapse:collapse;font-size:15px;font-variant-numeric:tabular-nums;margin-top:14px}
+th,td{padding:7px 6px;border-bottom:1px solid var(--line);text-align:right}
+th:first-child,td:first-child{text-align:left}#cor td{text-align:center}th{color:var(--muted);font-size:13px;font-weight:600}
+input[type=number]{width:100%;font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:7px}
+textarea{width:100%;height:90px;font:12px ui-monospace,Menlo,monospace;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:8px}
+.err{color:var(--dn);font-size:13px;min-height:20px;margin:6px 0 0}
+footer{margin-top:44px;padding:20px 0 36px;border-top:1px solid var(--line);color:var(--muted);font-size:13px}
+</style>
+</head>
+<body>
+<div class="wrap">
+<nav><b>Crossover</b><div><a href="#markets">Markets</a><a href="#backtest">Backtest</a><a href="#compare">Compare</a><a href="#risk">Risk</a><a href="#data">Your data</a><button id="theme" aria-label="Switch light or dark theme">Theme</button></div></nav>
+<h1>Stock analysis with the workings shown</h1>
+<p class="lede">Chart prices, read the indicators and test a moving-average strategy in one place. Every number is calculated in your browser.</p>
+<p class="banner">The six companies are fictional and their prices are randomly generated for demonstration.</p>
+
+<section id="markets">
+<div class="cols">
+<div class="card">
+<div class="top"><div><h2 id="ttl">NOVA</h2><small id="nm"></small></div>
+<div class="pills" id="rg"><button data-r="1M">1M</button><button data-r="3M">3M</button><button data-r="6M">6M</button><button data-r="1Y">1Y</button><button data-r="All">All</button></div></div>
+<div class="kpis" id="kp"></div>
+<div class="pills" style="margin-bottom:8px"><button data-t="candle">Candles</button><button data-t="line">Line</button><button data-o="s20">SMA 20</button><button data-o="s50">SMA 50</button><button data-o="bb">Bollinger Bands</button></div>
+<div id="ro"></div>
+<canvas id="c1" aria-label="Price chart"></canvas>
+<div class="pills" style="margin:12px 0 4px"><button data-s="rsi">RSI (14)</button><button data-s="macd">MACD</button></div>
+<canvas id="c2" aria-label="Indicator chart"></canvas>
+</div>
+<div><h3 style="margin:0 0 10px">Watchlist</h3><div id="wl"></div></div>
+</div>
+</section>
+
+<section id="backtest">
+<div class="card">
+<h2>Backtest a crossover</h2>
+<p class="lede" style="font-size:15px">Hold the stock while the fast average is above the slow one, otherwise stay in cash. Each trade costs 0.05%.</p>
+<div class="ctl"><div><label for="fast">Fast average <span id="fv"></span></label><input id="fast" type="range" min="5" max="100" value="50"></div><div><label for="slow">Slow average <span id="sv"></span></label><input id="slow" type="range" min="20" max="300" value="150"></div></div>
+<p class="err" id="err"></p>
+<div class="legend"><span><i style="background:var(--a)"></i>Strategy</span><span><i style="background:var(--b)"></i>Buy and hold</span></div>
+<canvas id="c3" aria-label="Growth of 1 invested"></canvas>
+<table id="tbl"></table>
+</div>
+</section>
+
+<section id="compare">
+<div class="card">
+<h2>Compare performance</h2>
+<p class="lede" style="font-size:15px">Each line starts at 100 a year ago, so you can see which stock grew more. Tap names to add or remove them.</p>
+<div class="pills" id="cmpb" style="margin-bottom:10px"></div>
+<div class="legend" id="cmpl"></div>
+<canvas id="c4" aria-label="Comparison chart"></canvas>
+<h3 style="margin-top:20px">How closely do they move together?</h3>
+<p class="banner" style="margin:4px 0 8px">Correlation of daily returns over the last year. Near 1 means they rise and fall together, near 0 means they are unrelated.</p>
+<div style="overflow-x:auto"><table id="cor"></table></div>
+</div>
+</section>
+<section id="risk">
+<div class="card">
+<h2>Position size calculator</h2>
+<p class="lede" style="font-size:15px">Work out how many shares to buy so that being stopped out costs only the amount you chose to risk. Entry and stop start from the selected stock.</p>
+<div class="ctl">
+<div><label for="acc">Account size</label><input id="acc" type="number" value="10000" min="0"></div>
+<div><label for="rk">Risk per trade <span id="rkv"></span></label><input id="rk" type="range" min="0.25" max="5" step="0.25" value="1"></div>
+<div><label for="ent">Entry price</label><input id="ent" type="number" step="0.01"></div>
+<div><label for="stp">Stop-loss price</label><input id="stp" type="number" step="0.01"></div>
+</div>
+<div class="kpis" id="pz"></div>
+</div>
+</section>
+<section id="data">
+<h2>What you can do here</h2>
+<div class="feat">
+<div><h3>Chart with context</h3><p>Switch between candles and a line, layer on moving averages and Bollinger Bands, and read RSI or MACD underneath. Hover or drag across the chart for exact values.</p></div>
+<div><h3>Test an idea</h3><p>Pick two moving-average lengths and compare the result with buy and hold, including trading costs, risk and the worst drop.</p></div>
+<div><h3>Bring your own prices</h3><p>Paste daily closes from any source and the same charts and tests run on your data.</p></div>
+<div><h3>Compare and size up risk</h3><p>Rebase stocks to 100, check how closely they move together, and size a position from your stop-loss.</p></div>
+</div>
+<div class="card" style="margin-top:20px">
+<h3>Paste daily closes (date, close)</h3>
+<textarea id="csv" aria-label="Daily closes" placeholder="2024-01-02,185.64&#10;2024-01-03,184.25"></textarea>
+<p class="err" id="err2"></p>
+<button class="solid" id="use">Analyze my data</button>
+</div>
+</section>
+<footer>Crossover is an educational tool. Nothing here is financial advice, and past results do not predict future returns.</footer>
+</div>
+<script>
+const $=id=>document.getElementById(id),RG={"1M":21,"3M":63,"6M":126,"1Y":252,All:1e9},L=48,Rm=8;
+const NM={NOVA:"Nova Semiconductor",BRDG:"Bridgeway Bank",KITE:"Kite Retail",ORCH:"Orchard Foods",MNTL:"Mantle Energy",FJRD:"Fjord Logistics"};
+const SEED={NOVA:[3,120],BRDG:[11,48],KITE:[5,76],ORCH:[19,64],MNTL:[23,92],FJRD:[31,35]};
+const DATA={},IND={},S={sym:"NOVA",range:"6M",type:"candle",s20:1,s50:1,bb:0,sub:"rsi",h:-1,cmp:["NOVA","BRDG","KITE"]};
+function rng(a){return()=>{a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+function synth(seed,p,n=1000){const r=rng(seed*7919),g=()=>Math.sqrt(-2*Math.log(r()+1e-12))*Math.cos(6.2832*r());
+ const d=new Date();d.setDate(d.getDate()-Math.round(n*1.45));const ph=r()*6.28,vol=.011+r()*.01,out=[],m=rng(4242),gm=()=>Math.sqrt(-2*Math.log(m()+1e-12))*Math.cos(6.2832*m());
+ while(out.length<n){d.setDate(d.getDate()+1);if(d.getDay()%6===0)continue;const i=out.length,o=p;p*=Math.exp(.0007*Math.sin(i/130+ph)+.00015+vol*g()+.007*gm());
+  out.push({d:new Date(d),o,h:Math.max(o,p)*(1+Math.abs(g())*.005),l:Math.min(o,p)*(1-Math.abs(g())*.005),c:p,v:Math.round(1e6*(.6+r())*(1+Math.abs(p/o-1)*40))})}
+ return out}
+function sma(a,w){const o=Array(a.length).fill(NaN);let s=0;for(let i=0;i<a.length;i++){s+=a[i];if(i>=w)s-=a[i-w];if(i>=w-1)o[i]=s/w}return o}
+function ema(a,n){const k=2/(n+1),o=[a[0]];for(let i=1;i<a.length;i++)o.push(a[i]*k+o[i-1]*(1-k));return o}
+function rsi(c,n=14){const o=Array(c.length).fill(NaN);let g=0,l=0;for(let i=1;i<c.length;i++){const d=c[i]-c[i-1],G=Math.max(d,0),Q=Math.max(-d,0);if(i<=n){g+=G/n;l+=Q/n}else{g=(g*(n-1)+G)/n;l=(l*(n-1)+Q)/n}if(i>=n)o[i]=l?100-100/(1+g/l):100}return o}
+function ind(D){const c=D.map(o=>o.c),s20=sma(c,20),bu=[],bl=[];
+ c.forEach((_,i)=>{if(i<19){bu.push(NaN);bl.push(NaN);return}let s=0;for(let j=i-19;j<=i;j++)s+=(c[j]-s20[i])**2;const sd=Math.sqrt(s/20);bu.push(s20[i]+2*sd);bl.push(s20[i]-2*sd)});
+ const m=ema(c,12).map((v,i)=>v-ema(c,26)[i]),sg=ema(m,9);return{c,s20,s50:sma(c,50),bu,bl,rsi:rsi(c),m,sg,hist:m.map((v,i)=>v-sg[i])}}
+const col=()=>{const s=getComputedStyle(document.documentElement);return k=>s.getPropertyValue(k).trim()};
+function frame(cv,h){const d=devicePixelRatio||1,w=cv.clientWidth;cv.style.height=h+"px";cv.width=w*d;cv.height=h*d;const x=cv.getContext("2d");x.scale(d,d);x.font="11px Instrument Sans,system-ui,sans-serif";return[x,w,col()]}
+const fd=(d,l)=>d.toLocaleDateString("en-US",l?{month:"short",day:"numeric",year:"numeric"}:{month:"short",day:"numeric"});
+function win(){const n=DATA[S.sym].length,cnt=Math.min(RG[S.range],n);return{n,cnt,a:n-cnt}}
+function axes(x,w,c,T,B,lo,hi,fmt,a,cnt,D,H){x.strokeStyle=c("--line");x.fillStyle=c("--muted");x.lineWidth=1;x.textAlign="right";
+ for(let k=0;k<=4;k++){const v=lo+(hi-lo)*k/4,y=Math.round(T+(B-T)*(1-k/4))+.5;x.beginPath();x.moveTo(L,y);x.lineTo(w-Rm,y);x.stroke();x.fillText(fmt(v),L-6,y+4)}
+ if(D){x.textAlign="center";const st=Math.ceil(cnt/6);for(let i=a+Math.floor(st/2);i<a+cnt;i+=st)x.fillText(fd(D[i].d,cnt>300),L+(w-L-Rm)*(i-a+.5)/cnt,H-6)}}
+function ln(x,arr,color,X,Y,a,b,wd=1.5){x.strokeStyle=color;x.lineWidth=wd;x.beginPath();let pen=0;for(let i=a;i<b;i++){const v=arr[i];if(!isFinite(v)){pen=0;continue}pen?x.lineTo(X(i),Y(v)):x.moveTo(X(i),Y(v));pen=1}x.stroke()}
+function cross(x,X,i,T,B,c){x.strokeStyle=c("--muted");x.setLineDash([3,3]);x.beginPath();x.moveTo(Math.round(X(i))+.5,T);x.lineTo(Math.round(X(i))+.5,B);x.stroke();x.setLineDash([])}
+function main(){const D=DATA[S.sym],I=IND[S.sym],{a,cnt}=win(),b=a+cnt,H=340,PH=H*.74,VB=H-22,T=8,[x,w,c]=frame($("c1"),H);
+ let lo=1/0,hi=-1/0;for(let i=a;i<b;i++){lo=Math.min(lo,D[i].l);hi=Math.max(hi,D[i].h);if(S.bb&&I.bu[i]){hi=Math.max(hi,I.bu[i]);lo=Math.min(lo,I.bl[i])}}
+ const p=(hi-lo)*.04;lo-=p;hi+=p;const X=i=>L+(w-L-Rm)*(i-a+.5)/cnt,Y=v=>T+(PH-T)*(1-(v-lo)/(hi-lo)),bw=Math.max(1,(w-L-Rm)/cnt*.7);
+ axes(x,w,c,T,PH,lo,hi,v=>v.toFixed(v<10?2:0),a,cnt,D,H);
+ let vm=0;for(let i=a;i<b;i++)vm=Math.max(vm,D[i].v);x.globalAlpha=.35;
+ for(let i=a;i<b;i++){x.fillStyle=D[i].c>=D[i].o?c("--up"):c("--dn");const h=(VB-PH-10)*D[i].v/vm;x.fillRect(X(i)-bw/2,VB-h,bw,h)}x.globalAlpha=1;
+ if(S.bb){x.fillStyle=c("--muted");x.globalAlpha=.12;x.beginPath();for(let i=a;i<b;i++)if(I.bu[i])x.lineTo(X(i),Y(I.bu[i]));for(let i=b-1;i>=a;i--)if(I.bl[i])x.lineTo(X(i),Y(I.bl[i]));x.fill();x.globalAlpha=1;ln(x,I.bu,c("--muted"),X,Y,a,b,1);ln(x,I.bl,c("--muted"),X,Y,a,b,1)}
+ if(S.type==="candle"&&cnt<=250){for(let i=a;i<b;i++){const o=D[i],k=o.c>=o.o?c("--up"):c("--dn");x.strokeStyle=x.fillStyle=k;x.lineWidth=1;x.beginPath();x.moveTo(X(i),Y(o.h));x.lineTo(X(i),Y(o.l));x.stroke();x.fillRect(X(i)-bw/2,Math.min(Y(o.o),Y(o.c)),bw,Math.max(1,Math.abs(Y(o.o)-Y(o.c))))}}
+ else ln(x,I.c,c("--ink"),X,Y,a,b,1.5);
+ if(S.s20)ln(x,I.s20,c("--a"),X,Y,a,b);if(S.s50)ln(x,I.s50,c("--b"),X,Y,a,b);
+ if(S.h>=a&&S.h<b)cross(x,X,S.h,T,VB,c)}
+function sub(){const D=DATA[S.sym],I=IND[S.sym],{a,cnt}=win(),b=a+cnt,H=140,T=8,B=H-8,[x,w,c]=frame($("c2"),H);let lo=0,hi=100;
+ if(S.sub==="macd"){lo=1/0;hi=-1/0;for(let i=a;i<b;i++)for(const v of[I.m[i],I.sg[i],I.hist[i]]){lo=Math.min(lo,v);hi=Math.max(hi,v)}}
+ const X=i=>L+(w-L-Rm)*(i-a+.5)/cnt,Y=v=>T+(B-T)*(1-(v-lo)/(hi-lo));axes(x,w,c,T,B,lo,hi,v=>v.toFixed(S.sub==="rsi"?0:1),a,cnt);
+ if(S.sub==="rsi"){x.setLineDash([4,4]);x.strokeStyle=c("--muted");for(const v of[30,70]){x.beginPath();x.moveTo(L,Y(v));x.lineTo(w-Rm,Y(v));x.stroke()}x.setLineDash([]);ln(x,I.rsi,c("--a"),X,Y,a,b,1.6)}
+ else{const bw=Math.max(1,(w-L-Rm)/cnt*.7);for(let i=a;i<b;i++){x.fillStyle=I.hist[i]>=0?c("--up"):c("--dn");x.globalAlpha=.5;x.fillRect(X(i)-bw/2,Math.min(Y(0),Y(I.hist[i])),bw,Math.abs(Y(0)-Y(I.hist[i])));x.globalAlpha=1}ln(x,I.m,c("--a"),X,Y,a,b);ln(x,I.sg,c("--b"),X,Y,a,b)}
+ if(S.h>=a&&S.h<b)cross(x,X,S.h,T,B,c)}
+function readout(){const D=DATA[S.sym],I=IND[S.sym],i=S.h>=0?S.h:D.length-1,o=D[i],f=v=>v.toFixed(2);
+ $("ro").innerHTML=`<b>${fd(o.d,1)}</b> &nbsp; Open <b>${f(o.o)}</b> &nbsp; High <b>${f(o.h)}</b> &nbsp; Low <b>${f(o.l)}</b> &nbsp; Close <b>${f(o.c)}</b> &nbsp; Volume <b>${(o.v/1e6).toFixed(2)}M</b> &nbsp; RSI <b>${isFinite(I.rsi[i])?I.rsi[i].toFixed(0):"n/a"}</b>`}
+function kpis(){const D=DATA[S.sym],I=IND[S.sym],{a,n}=win(),c=I.c,ch=c[n-1]/c[a]-1,d1=c[n-1]/c[n-2]-1,r=[];let hi=-1/0,lo=1/0;
+ for(let i=a;i<n;i++){hi=Math.max(hi,D[i].h);lo=Math.min(lo,D[i].l);if(i>a)r.push(c[i]/c[i-1]-1)}
+ const m=r.reduce((s,v)=>s+v,0)/r.length,vol=Math.sqrt(r.reduce((s,v)=>s+(v-m)**2,0)/(r.length-1||1))*Math.sqrt(252),pc=v=>(v>=0?"+":"")+(v*100).toFixed(1)+"%";
+ const k=(l,v,cl="")=>`<div><small>${l}</small><b class="${cl}">${v}</b></div>`;
+ $("kp").innerHTML=k("Last price",c[n-1].toFixed(2))+k("Today",pc(d1),d1>=0?"up":"dn")+k("Over "+S.range,pc(ch),ch>=0?"up":"dn")+k("Range high / low",hi.toFixed(0)+" / "+lo.toFixed(0))+k("Volatility (yearly)",(vol*100).toFixed(0)+"%")+k("RSI (14)",isFinite(I.rsi[n-1])?I.rsi[n-1].toFixed(0)+(I.rsi[n-1]>70?" overbought":I.rsi[n-1]<30?" oversold":" neutral"):"n/a")+k("Trend",c[n-1]>I.s50[n-1]?"Above SMA 50":"Below SMA 50",c[n-1]>I.s50[n-1]?"up":"dn")}
+const spark=(c,up)=>{const s=c.slice(-60),lo=Math.min(...s),hi=Math.max(...s);return`<svg viewBox="0 0 70 24" width="70" height="24" class="${up?"up":"dn"}"><polyline fill="none" stroke="currentColor" stroke-width="1.5" points="${s.map((v,i)=>(i*70/(s.length-1)).toFixed(1)+","+(22-20*(v-lo)/(hi-lo||1)).toFixed(1)).join(" ")}"/></svg>`};
+function watch(){$("wl").innerHTML=Object.keys(DATA).map(s=>{const c=IND[s].c,n=c.length,d=c[n-1]/c[n-2]-1;return`<button class="wl" data-sym="${s}" aria-pressed="${s===S.sym}"><div><b>${s}</b><small>${NM[s]||"Your data"}</small></div>${spark(c,d>=0)}<div class="r"><span>${c[n-1].toFixed(2)}</span><em class="${d>=0?"up":"dn"}">${(d>=0?"+":"")+(d*100).toFixed(1)}%</em></div></button>`}).join("")}
+function stats(r){const eq=[];let e=1,pk=1,dd=0,m=0;r.forEach(v=>{e*=1+v;eq.push(e);pk=Math.max(pk,e);dd=Math.min(dd,e/pk-1);m+=v});m/=r.length;
+ const vol=Math.sqrt(r.reduce((s,v)=>s+(v-m)**2,0)/(r.length-1))*Math.sqrt(252);return{eq,tot:e-1,cagr:Math.pow(e,252/r.length)-1,vol,sh:vol>0?m*252/vol:NaN,dd}}
+function bt(){const f=+$("fast").value,s=+$("slow").value;$("fv").textContent=f+" days";$("sv").textContent=s+" days";const c=IND[S.sym].c,n=c.length;
+ if(f>=s){$("err").textContent="Make the fast average shorter than the slow one.";return}
+ if(n<s+30){$("err").textContent="This series needs at least "+(s+30)+" prices for that slow average.";return}$("err").textContent="";
+ const sf=sma(c,f),ss=sma(c,s),pos=Array(n).fill(0),h=[],st=[];let tr=0,inv=0;for(let i=1;i<n;i++)pos[i]=sf[i-1]>ss[i-1]?1:0;
+ for(let i=1;i<n;i++){const r=c[i]/c[i-1]-1,t=Math.abs(pos[i]-pos[i-1]);tr+=t;inv+=pos[i];h.push(r);st.push(pos[i]*r-t*.0005)}
+ const A=stats(st),B=stats(h),[x,w,k]=frame($("c3"),240),T=8,Bt=218;let lo=1/0,hi=-1/0;[...A.eq,...B.eq].forEach(v=>{lo=Math.min(lo,v);hi=Math.max(hi,v)});
+ const X=i=>L+(w-L-Rm)*i/(n-2),Y=v=>T+(Bt-T)*(1-(v-lo)/(hi-lo)),D=DATA[S.sym];axes(x,w,k,T,Bt,lo,hi,v=>v.toFixed(2),0,n-1,null);
+ x.textAlign="center";[0,.25,.5,.75,1].forEach(q=>{const i=Math.round((n-2)*q);x.fillText(fd(D[i+1].d,1),Math.min(w-40,Math.max(L+30,X(i))),238)});
+ ln(x,B.eq,k("--b"),X,Y,0,n-1);ln(x,A.eq,k("--a"),X,Y,0,n-1,2);
+ const p=v=>(v*100).toFixed(1)+"%",q=v=>isFinite(v)?v.toFixed(2):"n/a",rows=[["Total return",p(A.tot),p(B.tot)],["Annual return",p(A.cagr),p(B.cagr)],["Volatility",p(A.vol),p(B.vol)],["Sharpe ratio",q(A.sh),q(B.sh)],["Worst drop",p(A.dd),p(B.dd)],["Trades",tr,1],["Time invested",p(inv/(n-1)),"100.0%"]];
+ $("tbl").innerHTML="<tr><th></th><th>Strategy</th><th>Buy and hold</th></tr>"+rows.map(r=>"<tr><td>"+r.join("</td><td>")+"</td></tr>").join("")}
+const PAL=["--a","--b","--ink","--up","--dn","--muted","#8B5CF6"];
+function cmp(){const keys=Object.keys(DATA);$("cmpb").innerHTML=keys.map(s=>`<button data-c="${s}" aria-pressed="${S.cmp.includes(s)}">${s}</button>`).join("");
+ const sel=keys.filter(s=>S.cmp.includes(s)),[x,w,c]=frame($("c4"),260),T=8,B=238;
+ if(!sel.length){$("cmpl").textContent="Choose at least one stock above.";return}
+ const n=Math.min(252,...sel.map(s=>DATA[s].length)),cl=s=>{const k=PAL[keys.indexOf(s)%PAL.length];return k[0]==="-"?c(k):k};
+ const ser=sel.map(s=>{const a=IND[s].c.slice(-n);return a.map(v=>v/a[0]*100)});let lo=1/0,hi=-1/0;ser.forEach(a=>a.forEach(v=>{lo=Math.min(lo,v);hi=Math.max(hi,v)}));
+ const X=i=>L+(w-L-Rm)*i/(n-1),Y=v=>T+(B-T)*(1-(v-lo)/(hi-lo)),D=DATA[sel[0]].slice(-n);axes(x,w,c,T,B,lo,hi,v=>v.toFixed(0),0,n,null);
+ x.textAlign="center";[0,.25,.5,.75,1].forEach(q=>{const i=Math.round((n-1)*q);x.fillText(fd(D[i].d,1),Math.min(w-40,Math.max(L+30,X(i))),256)});
+ ser.forEach((a,i)=>ln(x,a,cl(sel[i]),X,Y,0,n,2));
+ $("cmpl").innerHTML=sel.map((s,i)=>{const r=ser[i][n-1]-100;return`<span><i style="background:${cl(s)}"></i>${s} <b class="${r>=0?"up":"dn"}">${(r>=0?"+":"")+r.toFixed(1)}%</b></span>`}).join("")}
+function corr(){const keys=Object.keys(DATA);let R=keys.map(s=>{const c=IND[s].c.slice(-253);return c.slice(1).map((v,i)=>v/c[i]-1)});const len=Math.min(...R.map(r=>r.length));R=R.map(r=>r.slice(-len));
+ const m=R.map(r=>r.reduce((a,b)=>a+b,0)/len),cr=(i,j)=>{let xy=0,xx=0,yy=0;for(let k=0;k<len;k++){const a=R[i][k]-m[i],b=R[j][k]-m[j];xy+=a*b;xx+=a*a;yy+=b*b}return xy/Math.sqrt(xx*yy)};
+ $("cor").innerHTML="<tr><th></th>"+keys.map(s=>`<th style="text-align:center">${s}</th>`).join("")+"</tr>"+keys.map((s,i)=>`<tr><td>${s}</td>`+keys.map((t,j)=>{const v=cr(i,j);return`<td style="background:color-mix(in srgb,var(--a) ${Math.round(Math.max(0,v)*70)}%,transparent)">${v.toFixed(2)}</td>`}).join("")+"</tr>").join("")}
+function defs(){if(S.pz!==S.sym){S.pz=S.sym;const l=IND[S.sym].c.slice(-1)[0];$("ent").value=l.toFixed(2);$("stp").value=(l*.92).toFixed(2)}}
+function pz(){const acc=+$("acc").value,rk=+$("rk").value,e=+$("ent").value,s=+$("stp").value,k=(l,v)=>`<div><small>${l}</small><b>${v}</b></div>`;$("rkv").textContent=rk+"%";
+ if(!(acc>0)||!(e>0)||!(e>s)){$("pz").innerHTML=k("Result","Enter an account size, and a stop below the entry price");return}
+ const per=e-s,sh=Math.floor(acc*rk/100/per),f=v=>v.toLocaleString("en-US",{maximumFractionDigits:2});
+ $("pz").innerHTML=k("Shares to buy",sh.toLocaleString("en-US"))+k("Position value",f(sh*e))+k("Share of account",(sh*e/acc*100).toFixed(0)+"%")+k("Amount at risk",f(sh*per))+k("Loss per share",f(per)+" ("+(per/e*100).toFixed(1)+"%)")}
+function paint(){main();sub();readout()}
+function render(){$("ttl").textContent=S.sym;$("nm").textContent=NM[S.sym]||"Your data";
+ document.querySelectorAll("[data-r],[data-o],[data-t],[data-s]").forEach(b=>{const d=b.dataset;b.setAttribute("aria-pressed",d.r?S.range===d.r:d.o?!!S[d.o]:d.t?S.type===d.t:S.sub===d.s)});
+ kpis();watch();paint();bt();cmp();corr();defs();pz()}
+function pick(s){S.sym=s;S.h=-1;render()}
+document.addEventListener("click",e=>{const t=e.target.closest("[data-r],[data-o],[data-t],[data-s],[data-sym],[data-c]");if(!t)return;const d=t.dataset;
+ if(d.r)S.range=d.r;if(d.o)S[d.o]=+!S[d.o];if(d.t)S.type=d.t;if(d.s)S.sub=d.s;if(d.sym)S.sym=d.sym;if(d.c){const i=S.cmp.indexOf(d.c);i>=0?S.cmp.splice(i,1):S.cmp.push(d.c)}S.h=-1;render()});
+function hv(e){const r=e.currentTarget.getBoundingClientRect(),px=(e.touches?e.touches[0].clientX:e.clientX)-r.left,{a,cnt}=win();S.h=Math.max(a,Math.min(a+cnt-1,Math.floor(a+(px-L)/(r.width-L-Rm)*cnt)));paint()}
+["c1","c2"].forEach(id=>{const c=$(id);["mousemove","touchmove","touchstart"].forEach(t=>c.addEventListener(t,hv,{passive:true}));c.addEventListener("mouseleave",()=>{S.h=-1;paint()})});
+$("fast").oninput=$("slow").oninput=bt;["acc","rk","ent","stp"].forEach(id=>$(id).oninput=pz);
+$("theme").onclick=()=>{const r=document.documentElement,cur=r.dataset.theme||(matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light");r.dataset.theme=cur==="dark"?"light":"dark";render()};
+$("use").onclick=()=>{const rows=[];$("csv").value.split(/\r?\n/).forEach(l=>{const f=l.split(/[,\t;]/).map(s=>s.trim()),v=parseFloat(f[f.length-1]),d=new Date(f[0]);if(f.length>1&&v>0)rows.push({d:isNaN(d)?null:d,c:v})});
+ if(rows.length<60){$("err2").textContent="Paste at least 60 rows, one per line, like 2024-01-02,185.64.";return}$("err2").textContent="";
+ rows.forEach((o,i)=>{if(!o.d){o.d=new Date();o.d.setDate(o.d.getDate()-(rows.length-i))}});rows.sort((a,b)=>a.d-b.d);
+ let p=rows[0].c;DATA.CUSTOM=rows.map(o=>{const r={d:o.d,o:p,h:Math.max(p,o.c),l:Math.min(p,o.c),c:o.c,v:0};p=o.c;return r});IND.CUSTOM=ind(DATA.CUSTOM);S.sym="CUSTOM";S.h=-1;render();document.getElementById("markets").scrollIntoView()};
+addEventListener("resize",render);matchMedia("(prefers-color-scheme: dark)").addEventListener("change",render);
+for(const s in SEED){DATA[s]=synth(SEED[s][0],SEED[s][1]);IND[s]=ind(DATA[s])}
+render();
+</script>
+</body>
+</html>

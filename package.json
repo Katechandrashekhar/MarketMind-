@@ -1,0 +1,12 @@
+{
+  "name": "marketmind-stock-dashboard",
+  "version": "1.0.0",
+  "private": true,
+  "description": "MarketMind dashboard with a server-side Finnhub proxy",
+  "scripts": {
+    "start": "node --env-file=.env server.js"
+  },
+  "engines": {
+    "node": ">=20.6"
+  }
+}
